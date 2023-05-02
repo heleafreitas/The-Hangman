@@ -1,55 +1,61 @@
-import threading
+from multiprocessing import Semaphore
 import random
-# from jogador import *
+from multiprocessing.pool import ThreadPool
+from time import sleep
 
-banco_de_palavras = ['amor', 'fato', 'mito', 'caos', 'como', 'esmo', 'brio', 'vide', 'sede', 'pois', 'vida', 'auge', 'casa', 'saga', 'medo', 'ermo', 'suma', 'mote', 'idem', 'tolo', 'urge', 'sina', 'crer', 'apto', 'veio', 'pela', 'zelo', 'pude', 'tudo', 'ruim', 'rude', 'cota', 'coxo', 'soar', 'para', 'ater', 'mais', 'ente', 'amar', 'fase', 'auto', 'voga']
-palavra = random.choice(banco_de_palavras)
-letras_adivinhadas = ["_", "_", "_", "_"]
-semaforos = [threading.Semaphore(1) for _ in range(4)]
+# Palavras para o jogo
+palavras = ['amor', 'fato', 'mito', 'caos', 'como', 'esmo', 'brio', 'vide', 'sede', 'pois', 'vida', 'auge', 'casa', 'saga', 'medo', 'ermo', 'suma', 'mote', 'idem', 'tolo', 'urge', 'sina', 'crer', 'apto', 'veio', 'pela', 'zelo', 'pude', 'tudo', 'ruim', 'rude', 'cota', 'coxo', 'soar', 'para', 'ater', 'mais', 'ente', 'amar', 'fase', 'auto', 'voga']
+palavra = random.choice(palavras)
 
-class Jogador():
-    def __init__(self, nome):
-        self.nome = nome
-        self.palpites = []
-        self.pontuacao = 0
+# Cria uma lista de semáforos para cada posição na palavra
+semaforos = [Semaphore(1) for i in range(4)]
+
+# Lista de jogadores e suas pontuações iniciais
+jogadores = {'Jogador 1': 0, 'Jogador 2': 0, 'Jogador 3': 0}
+
+# Função que cada thread do palpite irá executar
+def palpite(args):
+    jogador, letra, posicao = args
+    # Espera a liberação do semáforo correspondente à posição da letra
+    semaforos[posicao].acquire()
+    # Verifica se a letra do palpite é igual à da posição correspondente na palavra
     
-    def escolhe_palpite(self):
+    if palavra[posicao] == letra:
+        print(f'Analisando palpite do {jogador} da letra {letra} na posição {posicao}: acertou!')
+        # Acertou! Incrementa a pontuação do jogador
+        jogadores[jogador] += 1
+    # Libera o semáforo correspondente à posição da letra
+    else:
+        print(f'Analisando palpite do {jogador} da letra {letra} na posição {posicao}: errou!')
+        semaforos[posicao].release()
+
+# Loop principal do jogo
+for rodada in range(5):
+    print(f'\nRodada {rodada+1} \n')
+    # Loop para os palpites dos jogadores
+    palpites_jogadores = {}
+    for jogador in jogadores.keys():
+        print(f'Vez do {jogador}')
+        palpites_jogador = []
+        # Cada jogador faz 4 palpites aleatórios
         for i in range(4):
-            posicao = int(input(f'{self.nome}, escolha uma posição de 1 a 4 para o palpite {i+1}: '))
-            letra = input(f'{self.nome}, escolha a letra para o palpite {i+1} na posição {posicao}: ')
-            palpite = PalpiteThread(posicao, letra)
-            self.palpites.append(palpite)
+            letra = input('Escolha a letra: ')
+            posicao = int(input(f'De 0 a 3, escolha uma posição para a letra {letra}: '))
+            # Cria uma nova thread para o palpite
+            palpites_jogador.append((jogador, letra, posicao))
+        palpites_jogadores[jogador] = palpites_jogador
         print('\n')
+     # Executa os palpites dos jogadores ao final da rodada
+    with ThreadPool(processes=12) as pool: # Cria uma lista com todos os palpites dos jogadores
+        args_list = []
+        for palpites_jogador in palpites_jogadores.values():
+            for palpite_jogador in palpites_jogador:
+                args_list.append(palpite_jogador)
+        pool.map_async(palpite, args_list)  # Executa as threads utilizando o método imap_unordered()
+        sleep(2)
+    print('\nPontuação:')
+    for jogador, pontos in jogadores.items():  # Mostra a pontuação de cada jogador
+        print(f'{jogador}: {pontos}')
 
-
-class PalpiteThread(threading.Thread):
-    def __init__(self, posicao, letra):
-        threading.Thread.__init__(self)
-        self.posicao = posicao
-        self.letra = letra
-    
-    def run(self):
-        semaforo = semaforos[self.posicao-1]
-        semaforo.acquire()
-        print(self.posicao + ' ' + self.letra)
-        semaforo.release()
-
-
-jogador1 = Jogador(input('Jogador 1, digite seu nome: '))
-jogador2 = Jogador(input('Jogador 2, digite seu nome: '))
-jogador3 = Jogador(input('Jogador 3, digite seu nome: '))
-print('-'*30 + '\n')
-jogador1.escolhe_palpite()
-jogador2.escolhe_palpite()
-jogador3.escolhe_palpite()
-
-# for j in range(4):
-#     jogador1.palpites[j].start()
-#     jogador2.palpites[j].start()
-#     jogador3.palpites[j].start()
-
-
-# for j in range(4):
-#     jogador1.palpites[j].join()
-#     jogador2.palpites[j].join()
-#     jogador3.palpites[j].join()
+vencedor = max(jogadores, key=jogadores.get) # Verifica quem ganhou
+print(f'\nO vencedor é {vencedor} com {jogadores[vencedor]} pontos!')
