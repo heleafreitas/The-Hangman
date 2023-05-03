@@ -6,10 +6,9 @@ from time import sleep
 # Palavras para o jogo
 palavras = ['amor', 'fato', 'mito', 'caos', 'como', 'esmo', 'brio', 'vide', 'sede', 'pois', 'vida', 'auge', 'casa', 'saga', 'medo', 'ermo', 'suma', 'mote', 'idem', 'tolo', 'urge', 'sina', 'crer', 'apto', 'veio', 'pela', 'zelo', 'pude', 'tudo', 'ruim', 'rude', 'cota', 'coxo', 'soar', 'para', 'ater', 'mais', 'ente', 'amar', 'fase', 'auto', 'voga']
 palavra = random.choice(palavras)
-
 # Cria uma lista de semáforos para cada posição na palavra
-semaforos = [Semaphore(1) for i in range(4)]
-
+semaforos = [Semaphore(1) for _ in range(4)]
+posicoes = [True, True, True, True]
 # Lista de jogadores e suas pontuações iniciais
 jogadores = {'Jogador 1': 0, 'Jogador 2': 0, 'Jogador 3': 0}
 
@@ -19,9 +18,9 @@ def palpite(args):
     # Espera a liberação do semáforo correspondente à posição da letra
     semaforos[posicao].acquire()
     # Verifica se a letra do palpite é igual à da posição correspondente na palavra
-    
     if palavra[posicao] == letra:
         print(f'Analisando palpite do {jogador} da letra {letra} na posição {posicao}: acertou!')
+        posicoes[posicao] = False
         # Acertou! Incrementa a pontuação do jogador
         jogadores[jogador] += 1
     # Libera o semáforo correspondente à posição da letra
@@ -29,9 +28,21 @@ def palpite(args):
         print(f'Analisando palpite do {jogador} da letra {letra} na posição {posicao}: errou!')
         semaforos[posicao].release()
 
+def verificar_adivinhacao():
+    adivinhacao = ''
+    for i in range(4):
+        if posicoes[i]:
+            adivinhacao += '_'
+        else:
+            adivinhacao += palavra[i]
+    print(f'Situação atual da adivinhação: {adivinhacao}')
+
 # Loop principal do jogo
 for rodada in range(5):
-    print(f'\nRodada {rodada+1} \n')
+    pontos_totais = 0
+    print(f'\n\tRodada {rodada+1} \n')
+    # Mostra a situação da adivinhação da palavra
+    verificar_adivinhacao()
     # Loop para os palpites dos jogadores
     palpites_jogadores = {}
     for jogador in jogadores.keys():
@@ -56,6 +67,11 @@ for rodada in range(5):
     print('\nPontuação:')
     for jogador, pontos in jogadores.items():  # Mostra a pontuação de cada jogador
         print(f'{jogador}: {pontos}')
+        pontos_totais += pontos
+    if pontos_totais >= 4:
+        break
 
 vencedor = max(jogadores, key=jogadores.get) # Verifica quem ganhou
-print(f'\nO vencedor é {vencedor} com {jogadores[vencedor]} pontos!')
+print('\n\tO JOGO ACABOU!')
+print(f'A palavra era: {palavra}')
+print(f'O vencedor é {vencedor} com {jogadores[vencedor]} pontos!')
