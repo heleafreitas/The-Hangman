@@ -1,11 +1,9 @@
 from multiprocessing import Semaphore
-import random
 from multiprocessing.pool import ThreadPool
 from time import sleep
+from bancodepalavras import gerar_palavra
 
-# Palavras para o jogo
-palavras = ['amor', 'fato', 'mito', 'caos', 'como', 'esmo', 'brio', 'vide', 'sede', 'pois', 'vida', 'auge', 'casa', 'saga', 'medo', 'ermo', 'suma', 'mote', 'idem', 'tolo', 'urge', 'sina', 'crer', 'apto', 'veio', 'pela', 'zelo', 'pude', 'tudo', 'ruim', 'rude', 'cota', 'coxo', 'soar', 'para', 'ater', 'mais', 'ente', 'amar', 'fase', 'auto', 'voga']
-palavra = random.choice(palavras)
+palavra = gerar_palavra()
 # Cria uma lista de semáforos para cada posição na palavra
 semaforos = [Semaphore(1) for _ in range(4)]
 posicoes = [True, True, True, True]
