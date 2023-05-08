@@ -69,7 +69,19 @@ for rodada in range(5):
     if pontos_totais >= 4:
         break
 
-vencedor = max(jogadores, key=jogadores.get) # Verifica quem ganhou
 print('\n\tO JOGO ACABOU!')
 print(f'A palavra era: {palavra}')
-print(f'O vencedor é {vencedor} com {jogadores[vencedor]} pontos!')
+ponto1 = jogadores['Jogador 1']
+ponto2 = jogadores['Jogador 2']
+ponto3 = jogadores['Jogador 3']
+if ponto1 == ponto2 == ponto3:
+    print('Empate entre todos os jogadores!')
+elif ponto1 == ponto2 and ponto1>ponto3:
+    print('Empate entre Jogador 1 e Jogador 2!')
+elif ponto1 == ponto3 and ponto1>ponto2:
+    print('Empate entre Jogador 1 e Jogador 3!')
+elif ponto2 == ponto3 and ponto2>ponto1:
+    print('Empate entre Jogador 2 e Jogador 3!')
+else:
+    vencedor = max(jogadores, key=jogadores.get) # Verifica quem ganhou
+    print(f'O vencedor é {vencedor} com {jogadores[vencedor]} pontos!')
